@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Next problem with 404 in catch-all-routes
 
-## Getting Started
+This is a minimum reproduction repository to demostrate the problem with the cache-control header and the catch-all routes.
 
-First, run the development server:
+First clone the repository and start the application
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone git@github.com:axelhzf/next-bug-catch-all-routes-cache-control.git
+npm run install
+npm run build
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Doing a request to a page that does not exist, will have the proper `Cache-Control` header.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```
+curl -v http://localhost:3000/not_found 2>&1 | grep 'Cache-Control'
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+```
 
-## Learn More
+But doing a request to a not found page, that is part of a catch all route, will have a different header.
 
-To learn more about Next.js, take a look at the following resources:
+```
+curl -v http://localhost:3000/posts/not_found 2>&1 | grep 'Cache-Control'
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```
+Cache-Control: s-maxage=31536000, stale-while-revalidate
+```
